@@ -1,13 +1,16 @@
 # Docker stack for development projects
 
+[![Build Status](https://travis-ci.org/psykoterro/Docker-dev-stack.svg?branch=master&style=flat-square)](https://travis-ci.org/psykoterro/Docker-dev-stack)
 :octocat:
 [![license](https://img.shields.io/github/license/mashape/apistatus.svg?style=flat-square)](LICENSE)
+[![contributions](https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat-square)](https://github.com/psykoterro/Docker-dev-stack/issues)
+[![HitCount](http://hits.dwyl.io/psykoterro/Docker-dev-stack.svg)](http://hits.dwyl.io/psykoterro/Docker-dev-stack)
 
 ![](doc/schema.png)
 
 ## Basic info
 
-* [nginx](http://apache.org/)
+* [Apache](http://apache.org/)
 * [PHP](http://php.net/)
 * [MySQL](https://www.mysql.com/)
 * [Redis](https://redis.io/)
@@ -65,12 +68,15 @@ Running `docker-compose ps` should result in the following running containers:
 ```
            Name                          Command               State              Ports
 --------------------------------------------------------------------------------------------------
-container_mysql         /entrypoint.sh mysqld            Up      0.0.0.0:3306->3306/tcp
-container_nginx         nginx                            Up      443/tcp, 0.0.0.0:80->80/tcp
-container_phpfpm        php-fpm                          Up      0.0.0.0:9000->9000/tcp
-container_redis         docker-entrypoint.sh redis ...   Up      6379/tcp
-container_rabbit        rabbitmq:3-management            Up      4369/tcp, 5671/tcp, 0.0.0.0:5672->5672/tcp, 15671/tcp, 25672/tcp, 0.0.0.0:15672->15672
-container_elk           /usr/bin/supervisord -n -c ...   Up      0.0.0.0:5044->5044/tcp, 0.0.0.0:5601->5601/tcp, 0.0.0.0:9200->9200/tcp, 9300/tcp
+509a6f18d55d        meg4r0m/alpine-haproxy   "/root/bootstrap.sh"     19 seconds ago      Up 18 seconds       443/tcp, 0.0.0.0:80->80/tcp, 8000/tcp                                                        haproxy
+1748a25e8f11        sebp/elk                 "/usr/local/bin/star…"   20 seconds ago      Up 19 seconds       0.0.0.0:5044->5044/tcp, 0.0.0.0:5601->5601/tcp, 0.0.0.0:9200->9200/tcp, 9300/tcp             container_elk
+c3f7ab321d05        klabs/varnish            "/root/bootstrap.sh"     20 seconds ago      Up 19 seconds       0.0.0.0:81->81/tcp, 6082/tcp                                                                 container_varnish
+da6e44aab27a        meg4r0m/alpine-php-cli   "/run/bootstrap.sh"      21 seconds ago      Up 20 seconds                                                                                                    container_php
+00ef0dc0ceba        meg4r0m/alpine-solr      "/root/bootstrap.sh"     22 seconds ago      Up 20 seconds       0.0.0.0:8983->8983/tcp                                                                       container_solr
+fdb8687774ad        meg4r0m/alpine-apache    "/root/pre-init.d/bo…"   22 seconds ago      Up 20 seconds       0.0.0.0:82->82/tcp, 80/tcp, 443/tcp, 0.0.0.0:88->88/tcp                                      container_web
+77ea9819de3b        mysql                    "docker-entrypoint.s…"   5 hours ago         Up 21 seconds       0.0.0.0:3306->3306/tcp, 33060/tcp                                                            container_mysql
+d7d901670197        rabbitmq:3-management    "docker-entrypoint.s…"   5 hours ago         Up 20 seconds       4369/tcp, 5671/tcp, 0.0.0.0:5672->5672/tcp, 15671/tcp, 25672/tcp, 0.0.0.0:15672->15672/tcp   container_rabbit
+d16a436a4430        redis:alpine             "docker-entrypoint.s…"   5 hours ago         Up 21 seconds       0.0.0.0:6379->6379/tcp                                                                       container_redis
 ```
 
 ## Usage
