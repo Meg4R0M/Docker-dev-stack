@@ -1,0 +1,131 @@
+version: '2'
+
+services:
+    web:
+        image: meg4r0m/alpine-apache
+        hostname: ${DOCKER_PROJECT_NAME}_web
+        container_name: container_web
+        ports:
+            - "82:82"
+            - "88:88"
+        volumes:
+            - ${DOCKER_WWW_ROOT}:/home/site/www
+            - ${DOCKER_STORAGE_LOCAL_PATH}:${DOCKER_STORAGE_MOUNT_POINT}
+        env_file:
+            - docker-compose.env
+            - docker-compose.env.local
+        cap_add:
+            - SYS_PTRACE
+    cli:
+        image: meg4r0m/alpine-php-cli
+        hostname: ${DOCKER_PROJECT_NAME}_cli
+        container_name: container_php
+        privileged: true
+        volumes:
+            - ${DOCKER_WWW_ROOT}:/home/site/www
+        environment:
+            - SSH_AUTH_SOCK=/ssh-agent
+        env_file:
+            - docker-compose.env
+            - docker-compose.env.local
+        cap_add:
+            - SYS_PTRACE
+        links:
+            - redis
+        tty: true
+    solr:
+        image: meg4r0m/alpine-solr
+        hostname: ${DOCKER_PROJECT_NAME}_solr
+        container_name: container_solr
+        ports:
+            - "8983:8983"
+        volumes:
+            - ${DOCKER_SOLR_CONF_PATH}:/opt/solr/solr/
+            - ./data/solr/:/opt/solr/data/
+            - ./logs/solr/:/opt/solr/logs
+        env_file:
+            - docker-compose.env
+            - docker-compose.env.local
+        cap_add:
+            - SYS_PTRACE
+    varnish:
+        image: klabs/varnish
+        hostname: ${DOCKER_PROJECT_NAME}_varnish
+        container_name: container_varnish
+        ports:
+            - "81:81"
+        volumes:
+            - ${DOCKER_VARNISH_VCL_FILE}:/etc/varnish/default.vcl
+            - ./logs/varnish/:/var/log/varnish
+        env_file:
+            - docker-compose.env
+            - docker-compose.env.local
+        cap_add:
+            - SYS_PTRACE
+            # varnish init daemon wants to set ulimits
+            - SYS_RESOURCE
+        security_opt:
+            - apparmor:unconfined
+        depends_on:
+            - web
+            - cli
+    haproxy:
+        image: meg4r0m/alpine-haproxy
+        hostname: ${DOCKER_PROJECT_NAME}_haproxy
+        container_name: haproxy
+        ports:
+            - "80:80"
+        volumes:
+            - ./config/haproxy/haproxy.cfg:/etc/haproxy/haproxy.cfg
+        env_file:
+            - docker-compose.env
+            - docker-compose.env.local
+        depends_on:
+            - web
+            - varnish
+            - solr
+            - redis
+    redis:
+        container_name: container_redis
+        image: redis:alpine
+        ports:
+            - "6379:6379"
+    mysql:
+        container_name: container_mysql
+        image: mysql
+        volumes:
+            - "./.data/mysql:/var/lib/mysql"
+        environment:
+            MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+            MYSQL_DATABASE: ${MYSQL_DATABASE}
+            MYSQL_USER: ${MYSQL_USER}
+            MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+        ports:
+            - "3306:3306"
+    rabbit:
+        container_name: container_rabbit
+        hostname: rabbit
+        image: rabbitmq:3-management
+        environment:
+            RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER}
+            RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD}
+        volumes:
+            - ./.data/rabbitmq/:/var/lib/rabbitmq
+        ports:
+            - "5672:5672"
+            - "15672:15672"
+    elk:
+      container_name: container_elk
+      image: sebp/elk
+      volumes:
+          - ./elk/logstash:/etc/logstash
+          - ./elk/logstash/patterns:/opt/logstash/patterns
+          - ./.data/elasticsearch:/var/lib/elasticsearch
+#          - ./elk/elasticsearch:/etc/elasticsearch # to place elastisearch.yml configuration
+      volumes_from:
+          - cli
+          - web
+      ports:
+        - "5601:5601"
+        - "9200:9200"
+        - "5044:5044"
