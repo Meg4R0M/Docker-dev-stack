@@ -72,7 +72,7 @@ services:
     haproxy:
         image: meg4r0m/alpine-haproxy
         hostname: ${DOCKER_PROJECT_NAME}_haproxy
-        container_name: haproxy
+        container_name: container_haproxy
         ports:
             - "80:80"
         volumes:
@@ -91,17 +91,18 @@ services:
         ports:
             - "6379:6379"
     mysql:
-        container_name: container_mysql
         image: meg4r0m/alpine-mysql
+        hostname: ${DOCKER_PROJECT_NAME}_mysql
+        container_name: container_mysql
         volumes:
             - ./config/mysql/:/etc/mysql/conf.d/
             - ./data/mysql/:/var/lib/mysql
             - ./logs/mysql/:/var/log/mysql
         environment:
-            MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
-            MYSQL_DATABASE: ${MYSQL_DATABASE}
+            MYSQL_ROOT_PWD: ${MYSQL_ROOT_PASSWORD}
+            MYSQL_USER_DB: ${MYSQL_DATABASE}
             MYSQL_USER: ${MYSQL_USER}
-            MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+            MYSQL_USER_PWD: ${MYSQL_PASSWORD}
         ports:
             - "3307:3306"
         # nb: this prevents the image to start on some ubuntu installs because of apparmor config...
